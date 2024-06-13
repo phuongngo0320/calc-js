@@ -1,0 +1,103 @@
+/* layout */
+
+body {
+    margin: 0;
+    padding: 0 2rem;
+    display: flex;
+    flex-direction: column;
+    max-width: 400px;
+    max-height: 900px;
+    background-color: black;
+}
+
+.controller {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    border-top: 2px solid white;
+    padding-top: 3rem;
+}
+
+/* util */
+.util {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+#backspace {
+    /* background-color: #FF9F0A; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 90px;
+    height: 90px;
+    border-radius: 100%;
+}
+
+#backspace .display {
+    font-size: 2rem;
+    color: white;
+    user-select: none;
+}
+
+#backspace:active {
+    background-color: #FF9F0A;
+}
+
+/* screen */
+.screen {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-end;
+    height: 250px;
+}
+
+.screen #input {
+    color: white;
+    font-size: 5rem;
+    margin: 0;
+    padding: 0;
+}
+
+.screen #output {
+    color: gray;
+    font-size: 3rem;
+    margin: 0;
+    padding: 0;
+}
+
+/* controller */
+.button {
+    width: 90px;
+    height: 90px;
+    border-radius: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #333333;
+    color: white;
+}
+
+.button:active {
+    background-color: darkmagenta !important;
+}
+
+.button.operator {
+    background-color: #FF9F0A;
+}
+
+.button.special {
+    background-color: #A5A5A5;
+    color: black;
+}
+
+.button .display {
+    font-size: 2.5rem;
+    user-select: none;
+}
+
+.button.operator .display {
+    font-size: 3rem;
+}
