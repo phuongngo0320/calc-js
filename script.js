@@ -54,7 +54,7 @@ function setInput() {
     } else {
 
         if (buffer[buffer.length - 1] === "%") {
-            disable([...NUMBER_BUTTONS, btnDot]);
+            disable([...NUMBER_BUTTONS, btnDot, btnPercent]);
         } else if (currentOperand().length === 0) {
             disable([btnPercent, btnDot]);
         }
