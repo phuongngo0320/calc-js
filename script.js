@@ -80,6 +80,7 @@ function setOutput(hide = false) {
     } catch(error) {
         if (error) {
             console.log("There is an error!");
+            disable([btnEq]);
         }
     } finally {
 
