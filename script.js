@@ -140,6 +140,7 @@ function append(token, view = null) {
         if (currentOperand().length === 0 && 
             buffer[buffer.length - 1] !== "%" &&
             buffer[buffer.length - 1] !== ")" &&
+            buffer[buffer.length - 1] !== "(" &&
             token !== "/100"
         ) { 
             
@@ -149,7 +150,7 @@ function append(token, view = null) {
             if (buffer.endsWith("%")) {
                 buffer += (view ?? token);
                 operandStack.push("");
-            } else if (buffer.endsWith(")")) {
+            } else if (buffer.endsWith(")") || buffer.endsWith("(")) {
                 buffer += (view ?? token);
             } else {
                 buffer += parseFloat(currentOperand()).toLocaleString('en') + (view ?? token);
