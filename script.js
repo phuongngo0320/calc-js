@@ -61,6 +61,17 @@ const pushParenthesis = (par) => {
 setInput();
 output.style.visibility = "hidden";
 
+function formatOperand(op) {
+    let formatted;
+    if (op.includes(".")) {
+        const [int, dec] = op.split(".");
+        formatted = parseFloat(int).toLocaleString('en') + "." + dec;
+    } else {
+        formatted = parseFloat(op).toLocaleString('en');
+    }
+    return formatted;
+}
+
 function setInput() {
 
     enable();
@@ -72,16 +83,18 @@ function setInput() {
     } else {
 
         if (buffer[buffer.length - 1] === "%") {
-            disable([...NUMBER_BUTTONS, btnDot, btnPercent]);
+            disable([...NUMBER_BUTTONS, btnDot, btnPercent, btnSign]);
         } else if (buffer[buffer.length - 1] === "(") {
-            disable([btnMul, btnDiv, btnPercent, btnDot]);
+            disable([btnMul, btnDiv, btnPercent, btnDot, btnSign]);
+        } else if (buffer[buffer.length - 1] === ")") {
+            disable([btnPercent, btnSign, btnDot]);
         } else if (currentOperand().length === 0) {
             disable([btnPercent, btnDot]);
         }
 
         console.log(buffer, currentOperand());
 
-        input.textContent = buffer + (currentOperand().length === 0 ? "" : parseFloat(currentOperand()).toLocaleString('en'));
+        input.textContent = buffer + (currentOperand().length === 0 ? "" : formatOperand(currentOperand()));
         if (input.textContent.length <= 8) {
             input.style.fontSize = "4rem";
         } else if (input.textContent.length <= 15) {
@@ -96,6 +109,7 @@ function setInput() {
 
 function setOutput(hide = false) {
     
+    console.log("exp", expression);
     let res;
     try {
         res = expression.length === 0 ? NaN : Function(`'use strict'; return (${expression.replace("--", "+")})`)();
@@ -134,7 +148,7 @@ function setOutput(hide = false) {
 }
 
 function append(token, view = null) {
-    if (isNaN(parseFloat(token))) { // operators
+    if (isNaN(parseFloat(token)) && token !== ".") { // operators
 
         // operator replacement for +, -, *, /
         if (currentOperand().length === 0 && 
@@ -143,7 +157,6 @@ function append(token, view = null) {
             buffer[buffer.length - 1] !== "(" &&
             token !== "/100"
         ) { 
-            
             buffer = buffer.substring(0, buffer.length - 1) + (view ?? token);
         } else {
 
@@ -153,7 +166,7 @@ function append(token, view = null) {
             } else if (buffer.endsWith(")") || buffer.endsWith("(")) {
                 buffer += (view ?? token);
             } else {
-                buffer += parseFloat(currentOperand()).toLocaleString('en') + (view ?? token);
+                buffer += formatOperand(currentOperand()) + (view ?? token);
                 operandStack.push("");
             }
         }
@@ -163,6 +176,7 @@ function append(token, view = null) {
             append("*", "×");
         }
         setCurrentOperand(currentOperand() + token);
+        console.log(currentOperand(), "current");
     }
 
     expression += token;
@@ -203,6 +217,9 @@ function toggle() {
     startIndex = expression.length - 1;
     while (startIndex > 0 && !isNaN(expression[startIndex])) {
         startIndex--;
+        if (expression[startIndex] === ".") {
+            startIndex--;
+        }
     }
 
     if (currentOperand().startsWith("-")) {
