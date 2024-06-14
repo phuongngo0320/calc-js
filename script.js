@@ -53,7 +53,11 @@ const pushParenthesis = (par) => {
         if (lastParenthesis() === ")") {
             throw new Error("Invalid parentheses stack operand");
         } else {
-            parStack.pop();
+            if (par === ")") {
+                parStack.pop();
+            } else {
+                parStack.push(par);
+            }
         }
     }
 }
@@ -92,7 +96,7 @@ function setInput() {
             disable([btnPercent, btnDot]);
         }
 
-        console.log(buffer, currentOperand());
+        // console.log(buffer, currentOperand());
 
         input.textContent = buffer + (currentOperand().length === 0 ? "" : formatOperand(currentOperand()));
         if (input.textContent.length <= 8) {
@@ -109,7 +113,7 @@ function setInput() {
 
 function setOutput(hide = false) {
     
-    console.log("exp", expression);
+    // console.log("exp", expression);
     let res;
     try {
         res = expression.length === 0 ? NaN : Function(`'use strict'; return (${expression.replace("--", "+")})`)();
@@ -176,7 +180,7 @@ function append(token, view = null) {
             append("*", "×");
         }
         setCurrentOperand(currentOperand() + token);
-        console.log(currentOperand(), "current");
+        // console.log(currentOperand(), "current");
     }
 
     expression += token;
@@ -185,25 +189,38 @@ function append(token, view = null) {
 }
 
 function parenthesize() {
+    console.log(parStack, "stack");
+    console.log(currentOperand(), "cur");
+    console.log(buffer, "buf");
+    if (parStack.length !== 0 && currentOperand() === "" && 
+        (
+            buffer[buffer.length - 1] === ")" ||
+            !isNaN(buffer[buffer.length - 1])
+        )
+    ) {
+        pushParenthesis(")");
+        expression += ")";
+        buffer += ")";
+        operandStack.push("");
+    } else
     if (currentOperand() === "") {
         if (buffer.endsWith(")")) {
             // add extra multiply sign for )(
             append("*", "×");
         }
         pushParenthesis("(");
-        expression = expression.concat("(");
-        buffer = buffer.concat("(");
+        expression += "(";
+        buffer += "("; 
     } else {
-        console.log("last", lastParenthesis());
         if (lastParenthesis() === "") {
             append("*", "×"); // extra multiply sign
             pushParenthesis("(");
-            expression = expression.concat("(");
-            buffer = buffer.concat("(");
+            expression += "(";
+            buffer += "(";
         } else {
             pushParenthesis(")");
-            expression = expression.concat(")");
-            buffer = buffer.concat(parseFloat(currentOperand()).toLocaleString('en')).concat(")");
+            expression += ")";
+            buffer += formatOperand(currentOperand()) + ")";
             operandStack.push("");
         }
     }
