@@ -84,9 +84,9 @@ function setInput() {
 
         if (buffer[buffer.length - 1] === "%") {
             disable([...NUMBER_BUTTONS, btnDot, btnPercent, btnSign]);
-        } else if (buffer[buffer.length - 1] === "(") {
+        } else if (buffer[buffer.length - 1] === "(" && currentOperand().length === 0) {
             disable([btnMul, btnDiv, btnPercent, btnDot, btnSign]);
-        } else if (buffer[buffer.length - 1] === ")") {
+        } else if (buffer[buffer.length - 1] === ")" && currentOperand().length === 0) {
             disable([btnPercent, btnSign, btnDot]);
         } else if (currentOperand().length === 0) {
             disable([btnPercent, btnDot]);
@@ -163,7 +163,7 @@ function append(token, view = null) {
             if (buffer.endsWith("%")) {
                 buffer += (view ?? token);
                 operandStack.push("");
-            } else if (buffer.endsWith(")") || buffer.endsWith("(")) {
+            } else if ((buffer.endsWith(")") || buffer.endsWith("(")) && currentOperand().length === 0) {
                 buffer += (view ?? token);
             } else {
                 buffer += formatOperand(currentOperand()) + (view ?? token);
