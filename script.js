@@ -22,6 +22,15 @@ const btnEq = document.querySelector('#eq');
 const btnSign = document.querySelector('#tgl');
 const btnDot = document.querySelector('#dot');
 
+const NUMBER_BUTTONS = [btn0, btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9];
+const OPERATOR_BUTTONS = [btnAdd, btnSub, btnMul, btnDiv];
+const ALL_BUTTONS = [
+    btnAC, btnPar, btnPercent, btnBack, 
+    ...NUMBER_BUTTONS, 
+    ...OPERATOR_BUTTONS, 
+    btnSign, btnDot, btnEq
+];
+
 const input = document.querySelector("#input");
 const output = document.querySelector("#output");
 
@@ -34,12 +43,18 @@ output.style.visibility = "hidden";
 
 function setInput() {
 
-    // TODO: disable buttons
+    enable();
 
     if (buffer.length === 0 && currentOperand.length === 0) {
         input.textContent = "Type something...";
         input.style.fontSize = "2rem";
+        disable([...OPERATOR_BUTTONS, btnEq, btnBack, btnDot, btnPercent]);
     } else {
+
+        if (buffer[buffer.length - 1] === "%") {
+            disable([...NUMBER_BUTTONS, btnDot]);
+        }
+
         input.textContent = buffer + (currentOperand.length === 0 ? "" : parseFloat(currentOperand).toLocaleString('en'));
         if (input.textContent.length <= 8) {
             input.style.fontSize = "4rem";
@@ -61,7 +76,6 @@ function setOutput(hide = false) {
     } catch(error) {
         if (error) {
             console.log("There is an error!");
-            // TODO: disable some buttons
         }
     } finally {
 
@@ -93,16 +107,21 @@ function setOutput(hide = false) {
 }
 
 function append(token, view = null) {
-    
     if (isNaN(parseFloat(token))) { // operators
 
-        if (currentOperand.length === 0) { // operator replacement
+        // expect an operand
+        if (currentOperand.length === 0 && 
+            buffer[buffer.length - 1] !== "%" &&
+            token !== "/100"
+        ) { 
+            // operator replacement    
             buffer = buffer.substring(0, buffer.length - 1) + (view ?? token);
         } else {
-
-            // TODO: percentage token handling
-
-            buffer += parseFloat(currentOperand).toLocaleString('en') + (view ?? token);
+            if (buffer.endsWith("%")) {
+                buffer += (view ?? token)
+            } else {
+                buffer += parseFloat(currentOperand).toLocaleString('en') + (view ?? token);
+            }
             previousOperand = currentOperand;
             currentOperand = "";
         }
@@ -120,14 +139,34 @@ function parenthesize() {
 }
 
 function backspace() {
+    if (buffer.endsWith("%")) {
+        expression = expression.substring(0, expression.length - 4);
+    } else {
+        expression = expression.substring(0, expression.length - 1);
+    }
+
     if (currentOperand.length > 0) {
         currentOperand = currentOperand.substring(0, currentOperand.length - 1);
     } else {
         buffer = buffer.substring(0, buffer.length - 1);
     }
-    expression = expression.substring(0, expression.length - 1);
+    
     setInput();
     setOutput();
+}
+
+function enable(buttons = ALL_BUTTONS) {
+    buttons.forEach(button => {
+        button.style.pointerEvents = "auto"
+        button.style.opacity = 1;
+    });
+}
+
+function disable(buttons = ALL_BUTTONS) {
+    buttons.forEach(button => {
+        button.style.pointerEvents = "none";
+        button.style.opacity = 0.5;
+    });
 }
 
 function reset() {
@@ -153,7 +192,7 @@ btnAdd.addEventListener('click', () => append('+'));
 btnSub.addEventListener('click', () => append('-'));
 btnMul.addEventListener('click', () => append('*', '×'));
 btnDiv.addEventListener('click', () => append('/', '÷'));
-// btnPercent.addEventListener('click', () => append('/100', '%')); // TODO: percentage
+btnPercent.addEventListener('click', () => append('/100', '%'));
 btnDot.addEventListener('click', () => append("."));
 btnPar.addEventListener('click', () => parenthesize());
 
