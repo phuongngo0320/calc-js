@@ -37,8 +37,26 @@ const output = document.querySelector("#output");
 let expression = "";
 let buffer = "";
 let operandStack = [""];
+let parStack = [];
+
 const currentOperand = () => operandStack[operandStack.length - 1];
 const setCurrentOperand = (value) => operandStack[operandStack.length - 1] = value;
+const lastParenthesis = () => parStack.length > 0 ? parStack[parStack.length - 1] : "";
+const pushParenthesis = (par) => {
+    if (parStack.length === 0) {
+        if (par === ")") {
+            throw new Error("Invalid parentheses stack operand");
+        } else {
+            parStack.push(par);
+        }
+    } else {
+        if (lastParenthesis() === ")") {
+            throw new Error("Invalid parentheses stack operand");
+        } else {
+            parStack.pop();
+        }
+    }
+}
 
 setInput();
 output.style.visibility = "hidden";
@@ -58,6 +76,8 @@ function setInput() {
         } else if (currentOperand().length === 0) {
             disable([btnPercent, btnDot]);
         }
+
+        console.log(buffer, currentOperand());
 
         input.textContent = buffer + (currentOperand().length === 0 ? "" : parseFloat(currentOperand()).toLocaleString('en'));
         if (input.textContent.length <= 8) {
@@ -114,22 +134,31 @@ function setOutput(hide = false) {
 function append(token, view = null) {
     if (isNaN(parseFloat(token))) { // operators
 
-        // expect an operand
+        // operator replacement for +, -, *, /
         if (currentOperand().length === 0 && 
             buffer[buffer.length - 1] !== "%" &&
+            buffer[buffer.length - 1] !== ")" &&
             token !== "/100"
         ) { 
-            // operator replacement    
+            
             buffer = buffer.substring(0, buffer.length - 1) + (view ?? token);
         } else {
+
             if (buffer.endsWith("%")) {
-                buffer += (view ?? token)
+                buffer += (view ?? token);
+                operandStack.push("");
+            } else if (buffer.endsWith(")")) {
+                buffer += (view ?? token);
             } else {
                 buffer += parseFloat(currentOperand()).toLocaleString('en') + (view ?? token);
+                operandStack.push("");
             }
-            operandStack.push("");
         }
     } else { // numbers
+        if (buffer.endsWith(")")) {
+            // add extra multiply sign for )<num>
+            append("*", "×");
+        }
         setCurrentOperand(currentOperand() + token);
     }
 
@@ -140,6 +169,31 @@ function append(token, view = null) {
 
 function parenthesize() {
     // TODO: parentheses
+    if (currentOperand() === "") {
+        if (buffer.endsWith(")")) {
+            // add extra multiply sign for )(
+            append("*", "×");
+        }
+        pushParenthesis("(");
+        expression = expression.concat("(");
+        buffer = buffer.concat("(");
+    } else {
+        console.log("last", lastParenthesis());
+        if (lastParenthesis() === "") {
+            append("*", "×"); // extra multiply sign
+            pushParenthesis("(");
+            expression = expression.concat("(");
+            buffer = buffer.concat("(");
+        } else {
+            pushParenthesis(")");
+            expression = expression.concat(")");
+            buffer = buffer.concat(parseFloat(currentOperand()).toLocaleString('en')).concat(")");
+            operandStack.push("");
+        }
+    }
+
+    setInput();
+    setOutput();
 }
 
 function backspace() {
@@ -153,7 +207,8 @@ function backspace() {
         setCurrentOperand(currentOperand().substring(0, currentOperand().length - 1));
     } else {
         buffer = buffer.substring(0, buffer.length - 1);
-        if (currentOperand().length === 0) {
+        if (currentOperand().length === 0 && !isNaN(buffer[buffer.length - 1])) {
+            // reach an operand
             operandStack.pop();
             while (!isNaN(buffer[buffer.length - 1])) {
                 buffer = buffer.substring(0, buffer.length - 1);
@@ -183,6 +238,7 @@ function reset() {
     expression = "";
     buffer = "";
     operandStack = [""];
+    parStack = [];
     setInput();
     setOutput();
 }
