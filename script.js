@@ -98,10 +98,10 @@ function setOutput(hide = false) {
     
     let res;
     try {
-        res = expression.length === 0 ? NaN : Function(`'use strict'; return (${expression})`)();
+        res = expression.length === 0 ? NaN : Function(`'use strict'; return (${expression.replace("--", "+")})`)();
     } catch(error) {
         if (error) {
-            console.log("There is an error!");
+            console.log("There is an error!", expression);
             disable([btnEq]);
         }
     } finally {
@@ -171,7 +171,6 @@ function append(token, view = null) {
 }
 
 function parenthesize() {
-    // TODO: parentheses
     if (currentOperand() === "") {
         if (buffer.endsWith(")")) {
             // add extra multiply sign for )(
@@ -193,6 +192,26 @@ function parenthesize() {
             buffer = buffer.concat(parseFloat(currentOperand()).toLocaleString('en')).concat(")");
             operandStack.push("");
         }
+    }
+
+    setInput();
+    setOutput();
+}
+
+function toggle() {
+
+    startIndex = expression.length - 1;
+    while (startIndex > 0 && !isNaN(expression[startIndex])) {
+        startIndex--;
+    }
+
+    if (currentOperand().startsWith("-")) {
+        // to plus
+        setCurrentOperand(currentOperand().substring(1, currentOperand().length));
+        expression = expression.substring(0, startIndex).concat(expression.substring(startIndex + 1, expression.length));
+    } else {
+        setCurrentOperand("-".concat(currentOperand()));
+        expression = expression.substring(0, startIndex).concat("-").concat(expression.substring(startIndex, expression.length));
     }
 
     setInput();
@@ -264,6 +283,7 @@ btnDiv.addEventListener('click', () => append('/', '÷'));
 btnPercent.addEventListener('click', () => append('/100', '%'));
 btnDot.addEventListener('click', () => append("."));
 btnPar.addEventListener('click', () => parenthesize());
+btnSign.addEventListener('click', () => toggle());
 
 btnAC.addEventListener('click', () => reset());
 btnEq.addEventListener('click', () => setOutput(true));
