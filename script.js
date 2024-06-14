@@ -36,8 +36,10 @@ const output = document.querySelector("#output");
 
 let expression = "";
 let buffer = "";
-let previousOperand = "";
-let currentOperand = "";
+let operandStack = [""];
+const currentOperand = () => operandStack[operandStack.length - 1];
+const setCurrentOperand = (value) => operandStack[operandStack.length - 1] = value;
+
 setInput();
 output.style.visibility = "hidden";
 
@@ -45,7 +47,7 @@ function setInput() {
 
     enable();
 
-    if (buffer.length === 0 && currentOperand.length === 0) {
+    if (buffer.length === 0 && currentOperand().length === 0) {
         input.textContent = "Type something...";
         input.style.fontSize = "2rem";
         disable([...OPERATOR_BUTTONS, btnEq, btnBack, btnDot, btnPercent]);
@@ -53,9 +55,11 @@ function setInput() {
 
         if (buffer[buffer.length - 1] === "%") {
             disable([...NUMBER_BUTTONS, btnDot]);
+        } else if (currentOperand().length === 0) {
+            disable([btnPercent, btnDot]);
         }
 
-        input.textContent = buffer + (currentOperand.length === 0 ? "" : parseFloat(currentOperand).toLocaleString('en'));
+        input.textContent = buffer + (currentOperand().length === 0 ? "" : parseFloat(currentOperand()).toLocaleString('en'));
         if (input.textContent.length <= 8) {
             input.style.fontSize = "4rem";
         } else if (input.textContent.length <= 15) {
@@ -82,7 +86,7 @@ function setOutput(hide = false) {
         if (hide) {
             output.style.visibility = "hidden";
             buffer = "";
-            currentOperand = res.toString();
+            setCurrentOperand(res.toString());
             expression = res.toString();
             setInput();
         } else {
@@ -110,7 +114,7 @@ function append(token, view = null) {
     if (isNaN(parseFloat(token))) { // operators
 
         // expect an operand
-        if (currentOperand.length === 0 && 
+        if (currentOperand().length === 0 && 
             buffer[buffer.length - 1] !== "%" &&
             token !== "/100"
         ) { 
@@ -120,13 +124,12 @@ function append(token, view = null) {
             if (buffer.endsWith("%")) {
                 buffer += (view ?? token)
             } else {
-                buffer += parseFloat(currentOperand).toLocaleString('en') + (view ?? token);
+                buffer += parseFloat(currentOperand()).toLocaleString('en') + (view ?? token);
             }
-            previousOperand = currentOperand;
-            currentOperand = "";
+            operandStack.push("");
         }
     } else { // numbers
-        currentOperand += token;
+        setCurrentOperand(currentOperand() + token);
     }
 
     expression += token;
@@ -140,15 +143,21 @@ function parenthesize() {
 
 function backspace() {
     if (buffer.endsWith("%")) {
-        expression = expression.substring(0, expression.length - 4);
+        expression = expression.substring(0, expression.length - 4); // remove /100
     } else {
         expression = expression.substring(0, expression.length - 1);
     }
 
-    if (currentOperand.length > 0) {
-        currentOperand = currentOperand.substring(0, currentOperand.length - 1);
+    if (currentOperand().length > 0) {
+        setCurrentOperand(currentOperand().substring(0, currentOperand().length - 1));
     } else {
         buffer = buffer.substring(0, buffer.length - 1);
+        if (currentOperand().length === 0) {
+            operandStack.pop();
+            while (!isNaN(buffer[buffer.length - 1])) {
+                buffer = buffer.substring(0, buffer.length - 1);
+            }
+        }
     }
     
     setInput();
@@ -172,7 +181,7 @@ function disable(buttons = ALL_BUTTONS) {
 function reset() {
     expression = "";
     buffer = "";
-    currentOperand = "";
+    operandStack = [""];
     setInput();
     setOutput();
 }
